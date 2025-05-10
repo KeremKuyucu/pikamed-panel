@@ -309,6 +309,13 @@ export default function DoctorPanel() {
             </div>
           )}
 
+            {activePage === "notifications" && (
+              <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Bildirimler</h2>
+                <p className="text-gray-600 dark:text-gray-400">Bildirimler özelliği yakında eklenecektir.</p>
+              </div>
+            )}
+
           {activePage === "calendar" && (
             <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
               <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Takvim</h2>

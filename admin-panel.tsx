@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { initializeApp } from "firebase/app"
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth"
 import {
   Sidebar,
   Header,
@@ -12,16 +12,17 @@ import {
   LoginScreen,
   PatientDetailModal,
 } from "./components/ui-components"
-import { PlusCircle, Trash2, AlertCircle, X, Calendar, Settings } from "lucide-react"
+import { PlusCircle, Trash2, AlertCircle, X } from "lucide-react"
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxX",
-  authDomain: "pikamed-panel.firebaseapp.com",
-  projectId: "pikamed-panel",
-  storageBucket: "pikamed-panel.appspot.com",
+  apiKey: "AIzaSyBJGx1bGVaI43YmpoZUPP70DAvFVRMJVWM",
+  authDomain: "marul-tarlasii.firebaseapp.com",
+  projectId: "marul-tarlasii",
+  storageBucket: "marul-tarlasii.firebasestorage.app",
   messagingSenderId: "770930842223",
-  appId: "1:770930842223:web:xxxxxxxxxxxxxxxxxxxxxx",
+  appId: "1:770930842223:web:555a834a781469055d8b9a",
+  measurementId: "G-ECMY15GHY6",
 }
 
 export default function AdminPanel() {
@@ -36,25 +37,27 @@ export default function AdminPanel() {
   const [doctorEmail, setDoctorEmail] = useState("")
   const [alert, setAlert] = useState({ message: "", type: "" })
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+
+  // Admin paneline bildirim gönderme özelliği ekleyelim ve sekme işlevselliğini ekleyelim
+  // Ayrıca yetki kontrolünü güncelleyelim
+
+  // İlk olarak, useState içine activePage ekleyelim
+  const [activePage, setActivePage] = useState("users")
+  const [notificationMessage, setNotificationMessage] = useState("")
+  const [notificationTarget, setNotificationTarget] = useState("all")
+  const [selectedPatientId, setSelectedPatientId] = useState("")
 
   // Initialize Firebase
   useEffect(() => {
-    try {
-      const firebaseApp = initializeApp(firebaseConfig)
-      const auth = getAuth(firebaseApp)
-
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user)
-        setLoading(false)
-      })
-
-      return () => unsubscribe()
-    } catch (error) {
-      console.error("Firebase initialization error:", error)
-      setLoading(false)
-    }
+    const firebaseApp = initializeApp(firebaseConfig)
+    const firebaseAuth = getAuth(firebaseApp)
+    setApp(firebaseApp)
+    setAuth(firebaseAuth)
   }, [])
+
+  // signInWithGoogle fonksiyonunda yetki kontrolünü güncelleyelim
+  // signInWithGoogle fonksiyonunu aşağıdaki şekilde değiştirin:
 
   // Handle Google Sign In
   const signInWithGoogle = async () => {
@@ -125,7 +128,7 @@ export default function AdminPanel() {
   // Fetch Doctors
   const getDoctors = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-doctors", {
+      const response = await fetch("/pikamed/get-doctors", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -154,7 +157,7 @@ export default function AdminPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
+      const response = await fetch("/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -183,7 +186,7 @@ export default function AdminPanel() {
   // Fetch Admins
   const getAdmins = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-admins", {
+      const response = await fetch("/pikamed/get-admins", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -319,6 +322,62 @@ export default function AdminPanel() {
     }
   }
 
+  // Bildirim gönderme fonksiyonunu ekleyelim
+  // sendNotification fonksiyonunu ekleyin:
+
+  const sendNotification = async () => {
+    if (!token || !notificationMessage) {
+      setAlert({
+        message: "Bildirim mesajı boş olamaz!",
+        type: "error",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/send-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          message: notificationMessage,
+          target: notificationTarget,
+          targetId: notificationTarget === "specific" ? selectedPatientId : undefined,
+          senderUid: user.uid,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setAlert({
+          message: "Bildirim başarıyla gönderildi!",
+          type: "success",
+        })
+        setNotificationMessage("")
+      } else {
+        setAlert({
+          message: result.message || "Bildirim gönderilirken bir hata oluştu.",
+          type: "error",
+        })
+      }
+    } catch (error: any) {
+      setAlert({
+        message: `Bildirim gönderilirken hata oluştu: ${error.message}`,
+        type: "error",
+      })
+    }
+  }
+
+  // Sayfa navigasyonu için handleNavigation fonksiyonunu ekleyelim
+  // handleNavigation fonksiyonunu ekleyin:
+
+  const handleNavigation = (page: string) => {
+    setActivePage(page)
+  }
+
   // If not logged in, show login screen
   if (!user) {
     return <LoginScreen onLogin={signInWithGoogle} />
@@ -326,15 +385,22 @@ export default function AdminPanel() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {/* Return kısmında Sidebar bileşenini güncelleyelim
+      // Sidebar bileşenini aşağıdaki şekilde değiştirin: */}
+
       <Sidebar
         isOpen={sidebarOpen}
         toggle={() => setSidebarOpen(!sidebarOpen)}
         role="admin"
         onSignOut={handleSignOut}
+        onNavigate={handleNavigation}
       />
 
       <div className="flex-1 lg:ml-64">
         <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} userInfo={user} />
+
+        {/* main içeriğini güncelleyelim, bildirim gönderme formunu ekleyelim
+        // main içeriğini aşağıdaki şekilde değiştirin: */}
 
         <main className="p-4 lg:p-6">
           {alert.message && (
@@ -361,102 +427,219 @@ export default function AdminPanel() {
             <p className="text-gray-600 dark:text-gray-400">PikaMed sistemini yönetin ve kullanıcıları görüntüleyin.</p>
           </div>
 
-          {/* main içeriğini güncelleyelim, bildirim gönderme formunu ekleyelim */}
-
-          {/* Sistem İstatistikleri */}
-          <div className="mb-8 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Sistem İstatistikleri</h2>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-lg bg-blue-50 p-4">
-                <p className="text-sm font-medium text-blue-600">Toplam Doktor</p>
-                <p className="text-2xl font-bold text-blue-700">{doctors.length}</p>
-              </div>
-              <div className="rounded-lg bg-green-50 p-4">
-                <p className="text-sm font-medium text-green-600">Toplam Hasta</p>
-                <p className="text-2xl font-bold text-green-700">{patients.length}</p>
-              </div>
-              <div className="rounded-lg bg-purple-50 p-4">
-                <p className="text-sm font-medium text-purple-600">Toplam Admin</p>
-                <p className="text-2xl font-bold text-purple-700">{admins.length}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Admin Listesi */}
-          <div className="mt-8">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Sistem Adminleri</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {admins.length > 0 ? (
-                admins.map((admin: any, index: number) => <AdminCard key={index} admin={admin} />)
-              ) : (
-                <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz admin bulunmuyor.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Hasta Listesi */}
-          <div className="mt-8">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Kayıtlı Hastalar</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {patients.length > 0 ? (
-                patients.map((patient: any, index: number) => (
-                  <PatientCard key={index} patient={patient} onViewDetails={viewPatientDetails} />
-                ))
-              ) : (
-                <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz hasta bulunmuyor.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Doktor Listesi */}
-          <div className="mt-8">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Doktorlar</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {doctors.length > 0 ? (
-                doctors.map((doctor: any, index: number) => <DoctorCard key={index} doctor={doctor} />)
-              ) : (
-                <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz doktor bulunmuyor.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Profil Bilgileri */}
-          <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Profil Bilgileri</h2>
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex-shrink-0">
-                <div className="h-32 w-32 overflow-hidden rounded-full bg-gray-200">
-                  {user?.photoURL ? (
-                    <img
-                      src={user.photoURL || "/placeholder.svg"}
-                      alt={user.displayName || "Admin"}
-                      className="h-full w-full object-cover"
+          {activePage === "users" && (
+            <>
+              <div className="grid gap-6 lg:grid-cols-3">
+                {/* Doktor Yönetimi */}
+                <div className="col-span-1 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Doktor Yönetimi</h2>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="doctorEmail"
+                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Doktor E-postası
+                    </label>
+                    <input
+                      type="email"
+                      id="doctorEmail"
+                      value={doctorEmail}
+                      onChange={(e) => setDoctorEmail(e.target.value)}
+                      placeholder="ornek@email.com"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                     />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-teal-100 text-teal-600">
-                      {user?.displayName?.charAt(0) || "A"}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={assignDoctorRole}
+                      className="flex items-center rounded-md bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Doktor Ekle
+                    </button>
+                    <button
+                      onClick={deleteDoctorRole}
+                      className="flex items-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Doktor Sil
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sistem İstatistikleri */}
+                <div className="col-span-2 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Sistem İstatistikleri</h2>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="rounded-lg bg-blue-50 p-4">
+                      <p className="text-sm font-medium text-blue-600">Toplam Doktor</p>
+                      <p className="text-2xl font-bold text-blue-700">{doctors.length}</p>
                     </div>
+                    <div className="rounded-lg bg-green-50 p-4">
+                      <p className="text-sm font-medium text-green-600">Toplam Hasta</p>
+                      <p className="text-2xl font-bold text-green-700">{patients.length}</p>
+                    </div>
+                    <div className="rounded-lg bg-purple-50 p-4">
+                      <p className="text-sm font-medium text-purple-600">Toplam Admin</p>
+                      <p className="text-2xl font-bold text-purple-700">{admins.length}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Doktor Listesi */}
+              <div className="mt-8">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Doktorlar</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {doctors.length > 0 ? (
+                    doctors.map((doctor: any, index: number) => <DoctorCard key={index} doctor={doctor} />)
+                  ) : (
+                    <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz doktor bulunmuyor.</p>
                   )}
                 </div>
               </div>
-              <div className="flex-grow space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Ad Soyad</h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">
-                    {user?.displayName || "İsimsiz Kullanıcı"}
-                  </p>
+
+              {/* Admin Listesi */}
+              <div className="mt-8">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Sistem Adminleri</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {admins.length > 0 ? (
+                    admins.map((admin: any, index: number) => <AdminCard key={index} admin={admin} />)
+                  ) : (
+                    <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz admin bulunmuyor.</p>
+                  )}
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">E-posta</h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">{user?.email}</p>
+              </div>
+
+              {/* Hasta Listesi */}
+              <div className="mt-8">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Kayıtlı Hastalar</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {patients.length > 0 ? (
+                    patients.map((patient: any, index: number) => (
+                      <PatientCard key={index} patient={patient} onViewDetails={viewPatientDetails} />
+                    ))
+                  ) : (
+                    <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz hasta bulunmuyor.</p>
+                  )}
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Rol</h3>
-                  <p className="text-lg font-medium text-gray-900 dark:text-white">Admin</p>
+              </div>
+            </>
+          )}
+
+          {activePage === "profile" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Profil Bilgileri</h2>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-32 w-32 overflow-hidden rounded-full bg-gray-200">
+                    {user?.photoURL ? (
+                      <img
+                        src={user.photoURL || "/placeholder.svg"}
+                        alt={user.displayName || "Admin"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-teal-100 text-teal-600">
+                        {user?.displayName?.charAt(0) || "A"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-grow space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Ad Soyad</h3>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">
+                      {user?.displayName || "İsimsiz Kullanıcı"}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">E-posta</h3>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">{user?.email}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Rol</h3>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">Admin</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {activePage === "settings" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Bildirim Gönder</h2>
+              <div className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="notificationTarget"
+                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Hedef
+                  </label>
+                  <select
+                    id="notificationTarget"
+                    value={notificationTarget}
+                    onChange={(e) => setNotificationTarget(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  >
+                    <option value="all">Tüm Kullanıcılar</option>
+                    <option value="doctors">Tüm Doktorlar</option>
+                    <option value="patients">Tüm Hastalar</option>
+                    <option value="specific">Belirli Bir Hasta</option>
+                  </select>
+                </div>
+
+                {notificationTarget === "specific" && (
+                  <div>
+                    <label
+                      htmlFor="selectedPatient"
+                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Hasta Seçin
+                    </label>
+                    <select
+                      id="selectedPatient"
+                      value={selectedPatientId}
+                      onChange={(e) => setSelectedPatientId(e.target.value)}
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    >
+                      <option value="">Hasta Seçin</option>
+                      {patients.map((patient: any) => (
+                        <option key={patient.uid} value={patient.uid}>
+                          {patient.displayName || patient.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="notificationMessage"
+                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Bildirim Mesajı
+                  </label>
+                  <textarea
+                    id="notificationMessage"
+                    value={notificationMessage}
+                    onChange={(e) => setNotificationMessage(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    placeholder="Bildirim mesajınızı buraya yazın..."
+                  ></textarea>
+                </div>
+
+                <button
+                  onClick={sendNotification}
+                  className="flex items-center rounded-md bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                >
+                  Bildirimi Gönder
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 

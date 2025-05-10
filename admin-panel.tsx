@@ -12,7 +12,12 @@ import {
   LoginScreen,
   PatientDetailModal,
 } from "./components/ui-components"
-import { PlusCircle, Trash2, AlertCircle, X } from "lucide-react"
+import { PlusCircle, Trash2, AlertCircle, X, Calendar, Settings } from "lucide-react"
+
+// Firebase Cloud Messaging için gerekli importları ekleyelim
+// Dosyanın başındaki import kısmına aşağıdaki importları ekleyin:
+
+import { getMessaging, getToken, onMessage } from "firebase/messaging"
 
 // Firebase configuration
 const firebaseConfig = {
@@ -39,6 +44,12 @@ export default function AdminPanel() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
+  // useState içine FCM için gerekli state'leri ekleyelim
+  // useState kısmına aşağıdaki state'leri ekleyin:
+
+  const [fcmToken, setFcmToken] = useState<string | null>(null)
+  const [messaging, setMessaging] = useState<any>(null)
+
   // Admin paneline bildirim gönderme özelliği ekleyelim ve sekme işlevselliğini ekleyelim
   // Ayrıca yetki kontrolünü güncelleyelim
 
@@ -48,14 +59,23 @@ export default function AdminPanel() {
   const [notificationTarget, setNotificationTarget] = useState("all")
   const [selectedPatientId, setSelectedPatientId] = useState("")
 
-  // Initialize Firebase
-  useEffect(() => {
-    const firebaseApp = initializeApp(firebaseConfig)
-    const firebaseAuth = getAuth(firebaseApp)
-    setApp(firebaseApp)
-    setAuth(firebaseAuth)
-  }, [])
-
+    // Initialize Firebase
+    useEffect(() => {
+      const firebaseApp = initializeApp(firebaseConfig)
+      const firebaseAuth = getAuth(firebaseApp)
+      setApp(firebaseApp)
+      setAuth(firebaseAuth)
+  
+      // Initialize Firebase Cloud Messaging
+      try {
+        if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+          const messagingInstance = getMessaging(firebaseApp)
+          setMessaging(messagingInstance)
+        }
+      } catch (error) {
+        console.error("FCM initialization error:", error)
+      }
+    }, [])
   // signInWithGoogle fonksiyonunda yetki kontrolünü güncelleyelim
   // signInWithGoogle fonksiyonunu aşağıdaki şekilde değiştirin:
 
@@ -128,7 +148,7 @@ export default function AdminPanel() {
   // Fetch Doctors
   const getDoctors = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-doctors", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-doctors", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -157,7 +177,7 @@ export default function AdminPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-users", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -186,7 +206,7 @@ export default function AdminPanel() {
   // Fetch Admins
   const getAdmins = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-admins", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-admins", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -346,6 +366,8 @@ export default function AdminPanel() {
           target: notificationTarget,
           targetId: notificationTarget === "specific" ? selectedPatientId : undefined,
           senderUid: user.uid,
+          title: "PikaMed Bildirimi",
+          useFCM: true,
         }),
       })
 
@@ -429,73 +451,22 @@ export default function AdminPanel() {
 
           {activePage === "users" && (
             <>
-              <div className="grid gap-6 lg:grid-cols-3">
-                {/* Doktor Yönetimi */}
-                <div className="col-span-1 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Doktor Yönetimi</h2>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="doctorEmail"
-                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Doktor E-postası
-                    </label>
-                    <input
-                      type="email"
-                      id="doctorEmail"
-                      value={doctorEmail}
-                      onChange={(e) => setDoctorEmail(e.target.value)}
-                      placeholder="ornek@email.com"
-                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
+              {/* Sistem İstatistikleri */}
+              <div className="mb-8 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Sistem İstatistikleri</h2>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="rounded-lg bg-blue-50 p-4">
+                    <p className="text-sm font-medium text-blue-600">Toplam Doktor</p>
+                    <p className="text-2xl font-bold text-blue-700">{doctors.length}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={assignDoctorRole}
-                      className="flex items-center rounded-md bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Doktor Ekle
-                    </button>
-                    <button
-                      onClick={deleteDoctorRole}
-                      className="flex items-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Doktor Sil
-                    </button>
+                  <div className="rounded-lg bg-green-50 p-4">
+                    <p className="text-sm font-medium text-green-600">Toplam Hasta</p>
+                    <p className="text-2xl font-bold text-green-700">{patients.length}</p>
                   </div>
-                </div>
-
-                {/* Sistem İstatistikleri */}
-                <div className="col-span-2 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Sistem İstatistikleri</h2>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="rounded-lg bg-blue-50 p-4">
-                      <p className="text-sm font-medium text-blue-600">Toplam Doktor</p>
-                      <p className="text-2xl font-bold text-blue-700">{doctors.length}</p>
-                    </div>
-                    <div className="rounded-lg bg-green-50 p-4">
-                      <p className="text-sm font-medium text-green-600">Toplam Hasta</p>
-                      <p className="text-2xl font-bold text-green-700">{patients.length}</p>
-                    </div>
-                    <div className="rounded-lg bg-purple-50 p-4">
-                      <p className="text-sm font-medium text-purple-600">Toplam Admin</p>
-                      <p className="text-2xl font-bold text-purple-700">{admins.length}</p>
-                    </div>
+                  <div className="rounded-lg bg-purple-50 p-4">
+                    <p className="text-sm font-medium text-purple-600">Toplam Admin</p>
+                    <p className="text-2xl font-bold text-purple-700">{admins.length}</p>
                   </div>
-                </div>
-              </div>
-
-              {/* Doktor Listesi */}
-              <div className="mt-8">
-                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Doktorlar</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {doctors.length > 0 ? (
-                    doctors.map((doctor: any, index: number) => <DoctorCard key={index} doctor={doctor} />)
-                  ) : (
-                    <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz doktor bulunmuyor.</p>
-                  )}
                 </div>
               </div>
 
@@ -521,6 +492,58 @@ export default function AdminPanel() {
                     ))
                   ) : (
                     <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz hasta bulunmuyor.</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activePage === "doctors" && (
+            <>
+              <div className="mb-8 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Doktor Yönetimi</h2>
+                <div className="mb-4">
+                  <label
+                    htmlFor="doctorEmail"
+                    className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Doktor E-postası
+                  </label>
+                  <input
+                    type="email"
+                    id="doctorEmail"
+                    value={doctorEmail}
+                    onChange={(e) => setDoctorEmail(e.target.value)}
+                    placeholder="ornek@email.com"
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={assignDoctorRole}
+                    className="flex items-center rounded-md bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Doktor Ekle
+                  </button>
+                  <button
+                    onClick={deleteDoctorRole}
+                    className="flex items-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Doktor Sil
+                  </button>
+                </div>
+              </div>
+
+              {/* Doktor Listesi */}
+              <div className="mt-8">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Doktorlar</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {doctors.length > 0 ? (
+                    doctors.map((doctor: any, index: number) => <DoctorCard key={index} doctor={doctor} />)
+                  ) : (
+                    <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz doktor bulunmuyor.</p>
                   )}
                 </div>
               </div>
@@ -566,7 +589,7 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {activePage === "settings" && (
+          {activePage === "notifications" && (
             <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
               <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Bildirim Gönder</h2>
               <div className="space-y-4">
@@ -637,6 +660,32 @@ export default function AdminPanel() {
                 >
                   Bildirimi Gönder
                 </button>
+              </div>
+            </div>
+          )}
+
+          {activePage === "calendar" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Takvim</h2>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Calendar className="mb-4 h-16 w-16 text-teal-500" />
+                <p className="text-lg font-medium text-gray-900 dark:text-white">Bu özellik yakında eklenecektir</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Takvim özelliği geliştirme aşamasındadır. Çok yakında kullanıma sunulacaktır.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activePage === "settings" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Ayarlar</h2>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Settings className="mb-4 h-16 w-16 text-teal-500" />
+                <p className="text-lg font-medium text-gray-900 dark:text-white">Bu özellik yakında eklenecektir</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Ayarlar özelliği geliştirme aşamasındadır. Çok yakında kullanıma sunulacaktır.
+                </p>
               </div>
             </div>
           )}

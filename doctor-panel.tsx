@@ -4,12 +4,7 @@ import { useState, useEffect } from "react"
 import { initializeApp } from "firebase/app"
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth"
 import { Sidebar, Header, PatientCard, LoginScreen, PatientDetailModal } from "./components/ui-components"
-import { AlertCircle, X, Bell, Calendar, Settings } from "lucide-react"
-
-// Firebase Cloud Messaging için gerekli importları ekleyelim
-// Dosyanın başındaki import kısmına aşağıdaki importları ekleyin:
-
-import { getMessaging, getToken, onMessage } from "firebase/messaging"
+import { AlertCircle, X } from "lucide-react"
 
 // Firebase configuration
 const firebaseConfig = {
@@ -37,22 +32,10 @@ export default function DoctorPanel() {
 
   // Initialize Firebase
   useEffect(() => {
-    try {
-      const firebaseApp = initializeApp(firebaseConfig)
-      const auth = getAuth(firebaseApp)
-      setApp(firebaseApp)
-      setAuth(auth)
-
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user)
-        setLoading(false)
-      })
-
-      return () => unsubscribe()
-    } catch (error) {
-      console.error("Firebase initialization error:", error)
-      setLoading(false)
-    }
+    const firebaseApp = initializeApp(firebaseConfig)
+    const firebaseAuth = getAuth(firebaseApp)
+    setApp(firebaseApp)
+    setAuth(firebaseAuth)
   }, [])
 
   // Handle Google Sign In
@@ -120,7 +103,7 @@ export default function DoctorPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
+        const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -287,45 +270,6 @@ export default function DoctorPanel() {
             </>
           )}
 
-          {activePage === "notifications" && (
-            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Bildirimler</h2>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Bell className="mb-4 h-16 w-16 text-teal-500" />
-                <p className="text-lg font-medium text-gray-900 dark:text-white">Bildirim Merkezi</p>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                  Bildirimleriniz burada görüntülenecektir. Şu anda yeni bildiriminiz bulunmamaktadır.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activePage === "calendar" && (
-            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Takvim</h2>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Calendar className="mb-4 h-16 w-16 text-teal-500" />
-                <p className="text-lg font-medium text-gray-900 dark:text-white">Bu özellik yakında eklenecektir</p>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                  Takvim özelliği geliştirme aşamasındadır. Çok yakında kullanıma sunulacaktır.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activePage === "settings" && (
-            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Ayarlar</h2>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Settings className="mb-4 h-16 w-16 text-teal-500" />
-                <p className="text-lg font-medium text-gray-900 dark:text-white">Bu özellik yakında eklenecektir</p>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                  Ayarlar özelliği geliştirme aşamasındadır. Çok yakında kullanıma sunulacaktır.
-                </p>
-              </div>
-            </div>
-          )}
-
           {activePage === "profile" && (
             <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
               <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Profil Bilgileri</h2>
@@ -362,6 +306,20 @@ export default function DoctorPanel() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activePage === "calendar" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Takvim</h2>
+              <p className="text-gray-600 dark:text-gray-400">Takvim özelliği yakında eklenecektir.</p>
+            </div>
+          )}
+
+          {activePage === "settings" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Ayarlar</h2>
+              <p className="text-gray-600 dark:text-gray-400">Ayarlar özelliği yakında eklenecektir.</p>
             </div>
           )}
         </main>

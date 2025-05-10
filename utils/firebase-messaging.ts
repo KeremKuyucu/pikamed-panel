@@ -20,7 +20,7 @@ export const requestNotificationPermission = async (app: any) => {
     // FCM token'ı al
     const messaging = getMessaging(app)
     const currentToken = await getToken(messaging, {
-      vapidKey: "YOUR_VAPID_KEY", // Gerçek projenizde bu değeri değiştirin
+      vapidKey: "BDac--G0Z6dAT-ffk4pkSMnk38jIBgWaHiwGDaWrtcR_XSq-LakTVKjc8SqXWq9ArBmg54Dyg99_yz2FHVaWBIs", // Gerçek projenizde bu değeri değiştirin
     })
 
     if (currentToken) {

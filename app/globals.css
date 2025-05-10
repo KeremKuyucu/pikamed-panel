@@ -20,7 +20,7 @@ body {
 
 @layer base {
   body {
-    @apply bg-white dark:bg-gray-900;
+    @apply bg-background text-foreground min-h-screen;
   }
 }
 

@@ -654,8 +654,18 @@ export default function AdminPanel() {
                     onChange={(e) => setNotificationMessage(e.target.value)}
                     rows={4}
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    placeholder="Bildirim mesajınızı buraya yazın..."
+                    placeholder="Bildirim mesajınızı buraya yazın... (HTML formatında yazınız.)"
                   ></textarea>
+                </div>
+
+                <div className="mt-4">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Önizleme
+                  </label>
+                  <div 
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-4 text-sm dark:text-gray-300 min-h-[100px]"
+                    dangerouslySetInnerHTML={{ __html: notificationMessage }}
+                  />
                 </div>
 
                 <button

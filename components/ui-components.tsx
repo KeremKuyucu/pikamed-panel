@@ -64,7 +64,7 @@ export function Sidebar({
               <li>
                 <button
                   onClick={() => onNavigate("users")}
-                  className="flex w-full items-center rounded-md bg-teal-50 dark:bg-teal-900/20 px-3 py-2 text-teal-700 dark:text-teal-300"
+                  className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
                 >
                   <Users className="mr-3 h-5 w-5" />
                   <span>Kullanıcılar</span>
@@ -81,6 +81,15 @@ export function Sidebar({
                   </button>
                 </li>
               )}
+              <li>
+                <button
+                  onClick={() => onNavigate("notifications")}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
+                >
+                  <Bell className="mr-3 h-5 w-5" />
+                  <span>Bildirimler</span>
+                </button>
+              </li>
               <li>
                 <button
                   onClick={() => onNavigate("calendar")}

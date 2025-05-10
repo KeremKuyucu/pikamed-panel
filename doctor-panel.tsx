@@ -4,7 +4,12 @@ import { useState, useEffect } from "react"
 import { initializeApp } from "firebase/app"
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth"
 import { Sidebar, Header, PatientCard, LoginScreen, PatientDetailModal } from "./components/ui-components"
-import { AlertCircle, X } from "lucide-react"
+import { AlertCircle, X, Bell, Calendar, Settings } from "lucide-react"
+
+// Firebase Cloud Messaging için gerekli importları ekleyelim
+// Dosyanın başındaki import kısmına aşağıdaki importları ekleyin:
+
+import { getMessaging, getToken, onMessage } from "firebase/messaging"
 
 // Firebase configuration
 const firebaseConfig = {
@@ -30,13 +35,84 @@ export default function DoctorPanel() {
   // İlk olarak, useState içine activePage ekleyelim
   const [activePage, setActivePage] = useState("users")
 
+  // useState içine FCM için gerekli state'leri ekleyelim
+  // useState kısmına aşağıdaki state'leri ekleyin:
+
+  const [fcmToken, setFcmToken] = useState<string | null>(null)
+  const [messaging, setMessaging] = useState<any>(null)
+
   // Initialize Firebase
   useEffect(() => {
     const firebaseApp = initializeApp(firebaseConfig)
     const firebaseAuth = getAuth(firebaseApp)
     setApp(firebaseApp)
     setAuth(firebaseAuth)
+
+    // Initialize Firebase Cloud Messaging
+    try {
+      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        const messagingInstance = getMessaging(firebaseApp)
+        setMessaging(messagingInstance)
+      }
+    } catch (error) {
+      console.error("FCM initialization error:", error)
+    }
   }, [])
+
+  // Get FCM token when user is logged in
+  useEffect(() => {
+    const getFCMToken = async () => {
+      if (!messaging || !user) return
+
+      try {
+        const currentToken = await getToken(messaging, {
+          vapidKey: "YOUR_VAPID_KEY", // Gerçek projenizde bu değeri değiştirin
+        })
+
+        if (currentToken) {
+          setFcmToken(currentToken)
+
+          // Save FCM token to database
+          if (token) {
+            await fetch("/pikamed/save-fcm-token", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ fcmToken: currentToken, uid: user.uid }),
+            })
+          }
+        } else {
+          console.log("No FCM token available")
+        }
+      } catch (error) {
+        console.error("Error getting FCM token:", error)
+      }
+    }
+
+    getFCMToken()
+  }, [messaging, user, token])
+
+  // Listen for FCM messages
+  useEffect(() => {
+    if (!messaging) return
+
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log("Message received:", payload)
+      // Bildirim gösterme işlemi
+      if (payload.notification) {
+        setAlert({
+          message: payload.notification.body || "Yeni bildirim alındı",
+          type: "success",
+        })
+      }
+    })
+
+    return () => {
+      unsubscribe()
+    }
+  }, [messaging])
 
   // Handle Google Sign In
   const signInWithGoogle = async () => {
@@ -52,7 +128,7 @@ export default function DoctorPanel() {
       setToken(idToken)
 
       // Check doctor access
-      const response = await fetch("https://keremkk.glitch.me/pikamed/doctor-access", {
+      const response = await fetch("/pikamed/doctor-access", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -103,7 +179,7 @@ export default function DoctorPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
+      const response = await fetch("/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -135,7 +211,7 @@ export default function DoctorPanel() {
 
     try {
       // Send warning notification
-      await fetch("https://keremkk.glitch.me/pikamed/send-warning", {
+      await fetch("/pikamed/send-warning", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +224,7 @@ export default function DoctorPanel() {
       })
 
       // Get patient data
-      const response = await fetch(`https://keremkk.glitch.me/pikamed/userdata`, {
+      const response = await fetch(`/pikamed/userdata`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,6 +346,45 @@ export default function DoctorPanel() {
             </>
           )}
 
+          {activePage === "notifications" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Bildirimler</h2>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Bell className="mb-4 h-16 w-16 text-teal-500" />
+                <p className="text-lg font-medium text-gray-900 dark:text-white">Bildirim Merkezi</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Bildirimleriniz burada görüntülenecektir. Şu anda yeni bildiriminiz bulunmamaktadır.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activePage === "calendar" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Takvim</h2>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Calendar className="mb-4 h-16 w-16 text-teal-500" />
+                <p className="text-lg font-medium text-gray-900 dark:text-white">Bu özellik yakında eklenecektir</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Takvim özelliği geliştirme aşamasındadır. Çok yakında kullanıma sunulacaktır.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activePage === "settings" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Ayarlar</h2>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Settings className="mb-4 h-16 w-16 text-teal-500" />
+                <p className="text-lg font-medium text-gray-900 dark:text-white">Bu özellik yakında eklenecektir</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Ayarlar özelliği geliştirme aşamasındadır. Çok yakında kullanıma sunulacaktır.
+                </p>
+              </div>
+            </div>
+          )}
+
           {activePage === "profile" && (
             <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
               <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Profil Bilgileri</h2>
@@ -306,20 +421,6 @@ export default function DoctorPanel() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {activePage === "calendar" && (
-            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Takvim</h2>
-              <p className="text-gray-600 dark:text-gray-400">Takvim özelliği yakında eklenecektir.</p>
-            </div>
-          )}
-
-          {activePage === "settings" && (
-            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Ayarlar</h2>
-              <p className="text-gray-600 dark:text-gray-400">Ayarlar özelliği yakında eklenecektir.</p>
             </div>
           )}
         </main>

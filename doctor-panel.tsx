@@ -35,84 +35,25 @@ export default function DoctorPanel() {
   // İlk olarak, useState içine activePage ekleyelim
   const [activePage, setActivePage] = useState("users")
 
-  // useState içine FCM için gerekli state'leri ekleyelim
-  // useState kısmına aşağıdaki state'leri ekleyin:
-
-  const [fcmToken, setFcmToken] = useState<string | null>(null)
-  const [messaging, setMessaging] = useState<any>(null)
-
   // Initialize Firebase
   useEffect(() => {
-    const firebaseApp = initializeApp(firebaseConfig)
-    const firebaseAuth = getAuth(firebaseApp)
-    setApp(firebaseApp)
-    setAuth(firebaseAuth)
-
-    // Initialize Firebase Cloud Messaging
     try {
-      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-        const messagingInstance = getMessaging(firebaseApp)
-        setMessaging(messagingInstance)
-      }
+      const firebaseApp = initializeApp(firebaseConfig)
+      const auth = getAuth(firebaseApp)
+      setApp(firebaseApp)
+      setAuth(auth)
+
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        setUser(user)
+        setLoading(false)
+      })
+
+      return () => unsubscribe()
     } catch (error) {
-      console.error("FCM initialization error:", error)
+      console.error("Firebase initialization error:", error)
+      setLoading(false)
     }
   }, [])
-
-  // Get FCM token when user is logged in
-  useEffect(() => {
-    const getFCMToken = async () => {
-      if (!messaging || !user) return
-
-      try {
-        const currentToken = await getToken(messaging, {
-          vapidKey: "BDac--G0Z6dAT-ffk4pkSMnk38jIBgWaHiwGDaWrtcR_XSq-LakTVKjc8SqXWq9ArBmg54Dyg99_yz2FHVaWBIs", // Gerçek projenizde bu değeri değiştirin
-        })
-
-        if (currentToken) {
-          setFcmToken(currentToken)
-
-          // Save FCM token to database
-          if (token) {
-            await fetch("https://keremkk.glitch.me/pikamed/save-fcm-token", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ fcmToken: currentToken, uid: user.uid }),
-            })
-          }
-        } else {
-          console.log("No FCM token available")
-        }
-      } catch (error) {
-        console.error("Error getting FCM token:", error)
-      }
-    }
-
-    getFCMToken()
-  }, [messaging, user, token])
-
-  // Listen for FCM messages
-  useEffect(() => {
-    if (!messaging) return
-
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("Message received:", payload)
-      // Bildirim gösterme işlemi
-      if (payload.notification) {
-        setAlert({
-          message: payload.notification.body || "Yeni bildirim alındı",
-          type: "success",
-        })
-      }
-    })
-
-    return () => {
-      unsubscribe()
-    }
-  }, [messaging])
 
   // Handle Google Sign In
   const signInWithGoogle = async () => {

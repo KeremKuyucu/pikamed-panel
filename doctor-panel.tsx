@@ -66,7 +66,7 @@ export default function DoctorPanel() {
 
       try {
         const currentToken = await getToken(messaging, {
-          vapidKey: "YOUR_VAPID_KEY", // Gerçek projenizde bu değeri değiştirin
+          vapidKey: "BDac--G0Z6dAT-ffk4pkSMnk38jIBgWaHiwGDaWrtcR_XSq-LakTVKjc8SqXWq9ArBmg54Dyg99_yz2FHVaWBIs", // Gerçek projenizde bu değeri değiştirin
         })
 
         if (currentToken) {
@@ -74,7 +74,7 @@ export default function DoctorPanel() {
 
           // Save FCM token to database
           if (token) {
-            await fetch("/pikamed/save-fcm-token", {
+            await fetch("https://keremkk.glitch.me/pikamed/save-fcm-token", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -128,7 +128,7 @@ export default function DoctorPanel() {
       setToken(idToken)
 
       // Check doctor access
-      const response = await fetch("/pikamed/doctor-access", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/doctor-access", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -179,7 +179,7 @@ export default function DoctorPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-users", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -211,7 +211,7 @@ export default function DoctorPanel() {
 
     try {
       // Send warning notification
-      await fetch("/pikamed/send-warning", {
+      await fetch("https://keremkk.glitch.me/pikamed/send-warning", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -224,7 +224,7 @@ export default function DoctorPanel() {
       })
 
       // Get patient data
-      const response = await fetch(`/pikamed/userdata`, {
+      const response = await fetch(`https://keremkk.glitch.me/pikamed/userdata`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

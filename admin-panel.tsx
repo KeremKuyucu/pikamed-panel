@@ -59,85 +59,6 @@ export default function AdminPanel() {
   const [notificationTarget, setNotificationTarget] = useState("all")
   const [selectedPatientId, setSelectedPatientId] = useState("")
 
-  // Initialize Firebase
-  useEffect(() => {
-    const firebaseApp = initializeApp(firebaseConfig)
-    const firebaseAuth = getAuth(firebaseApp)
-    setApp(firebaseApp)
-    setAuth(firebaseAuth)
-
-    // Initialize Firebase Cloud Messaging
-    try {
-      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-        const messagingInstance = getMessaging(firebaseApp)
-        setMessaging(messagingInstance)
-      }
-    } catch (error) {
-      console.error("FCM initialization error:", error)
-    }
-  }, [])
-
-  // FCM token alma işlemi için yeni bir useEffect ekleyelim
-  // Aşağıdaki useEffect'i ekleyin:
-
-  // Get FCM token when user is logged in
-  useEffect(() => {
-    const getFCMToken = async () => {
-      if (!messaging || !user) return
-
-      try {
-        const currentToken = await getToken(messaging, {
-          vapidKey: "YOUR_VAPID_KEY", // Gerçek projenizde bu değeri değiştirin
-        })
-
-        if (currentToken) {
-          setFcmToken(currentToken)
-
-          // Save FCM token to database
-          if (token) {
-            await fetch("/pikamed/save-fcm-token", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ fcmToken: currentToken, uid: user.uid }),
-            })
-          }
-        } else {
-          console.log("No FCM token available")
-        }
-      } catch (error) {
-        console.error("Error getting FCM token:", error)
-      }
-    }
-
-    getFCMToken()
-  }, [messaging, user, token])
-
-  // FCM mesajlarını dinlemek için bir useEffect ekleyelim
-  // Aşağıdaki useEffect'i ekleyin:
-
-  // Listen for FCM messages
-  useEffect(() => {
-    if (!messaging) return
-
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("Message received:", payload)
-      // Bildirim gösterme işlemi
-      if (payload.notification) {
-        setAlert({
-          message: payload.notification.body || "Yeni bildirim alındı",
-          type: "success",
-        })
-      }
-    })
-
-    return () => {
-      unsubscribe()
-    }
-  }, [messaging])
-
   // signInWithGoogle fonksiyonunda yetki kontrolünü güncelleyelim
   // signInWithGoogle fonksiyonunu aşağıdaki şekilde değiştirin:
 
@@ -155,7 +76,7 @@ export default function AdminPanel() {
       setToken(idToken)
 
       // Check admin access
-      const response = await fetch("https://keremkk.glitch.me/pikamed/superadmin-access", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/admin-access", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -210,7 +131,7 @@ export default function AdminPanel() {
   // Fetch Doctors
   const getDoctors = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-doctors", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-doctors", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -239,7 +160,7 @@ export default function AdminPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-users", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +189,7 @@ export default function AdminPanel() {
   // Fetch Admins
   const getAdmins = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-admins", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-admins", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -299,7 +220,7 @@ export default function AdminPanel() {
     if (!token || !doctorEmail) return
 
     try {
-      const response = await fetch("/pikamed/add-doctor", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/add-doctor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -336,7 +257,7 @@ export default function AdminPanel() {
     if (!token || !doctorEmail) return
 
     try {
-      const response = await fetch("/pikamed/delete-doctor", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/delete-doctor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -373,7 +294,7 @@ export default function AdminPanel() {
     if (!token) return
 
     try {
-      const response = await fetch(`/pikamed/userdata`, {
+      const response = await fetch(`https://keremkk.glitch.me/pikamed/userdata`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -417,7 +338,7 @@ export default function AdminPanel() {
     }
 
     try {
-      const response = await fetch("/pikamed/send-notification", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/send-notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -428,7 +349,6 @@ export default function AdminPanel() {
           target: notificationTarget,
           targetId: notificationTarget === "specific" ? selectedPatientId : undefined,
           senderUid: user.uid,
-          // FCM için ek parametreler
           title: "PikaMed Bildirimi",
           useFCM: true,
         }),

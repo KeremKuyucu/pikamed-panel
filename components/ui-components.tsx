@@ -193,7 +193,7 @@ export function PatientCard({ patient, onViewDetails }: { patient: any; onViewDe
             </div>
           </div>
           <button
-            onClick={() => onViewDetails(patient.uid)}
+            onClick={onViewDetails}
             className="flex items-center rounded-md bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-600 transition-colors hover:bg-teal-100"
           >
             Detaylar

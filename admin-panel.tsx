@@ -488,7 +488,11 @@ export default function AdminPanel() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {patients.length > 0 ? (
                     patients.map((patient: any, index: number) => (
-                      <PatientCard key={index} patient={patient} onViewDetails={viewPatientDetails)} />
+                      <PatientCard 
+                        key={index} 
+                        patient={patient} 
+                        onViewDetails={() => viewPatientDetails(patient.uid)} 
+                      />
                     ))
                   ) : (
                     <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz hasta bulunmuyor.</p>

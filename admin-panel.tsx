@@ -59,6 +59,23 @@ export default function AdminPanel() {
   const [notificationTarget, setNotificationTarget] = useState("all")
   const [selectedPatientId, setSelectedPatientId] = useState("")
 
+    // Initialize Firebase
+    useEffect(() => {
+      const firebaseApp = initializeApp(firebaseConfig)
+      const firebaseAuth = getAuth(firebaseApp)
+      setApp(firebaseApp)
+      setAuth(firebaseAuth)
+  
+      // Initialize Firebase Cloud Messaging
+      try {
+        if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+          const messagingInstance = getMessaging(firebaseApp)
+          setMessaging(messagingInstance)
+        }
+      } catch (error) {
+        console.error("FCM initialization error:", error)
+      }
+    }, [])
   // signInWithGoogle fonksiyonunda yetki kontrolünü güncelleyelim
   // signInWithGoogle fonksiyonunu aşağıdaki şekilde değiştirin:
 

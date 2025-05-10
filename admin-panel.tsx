@@ -569,12 +569,12 @@ export default function AdminPanel() {
                     {user?.photoURL ? (
                       <img
                         src={user.photoURL || "/placeholder.svg"}
-                        alt={user.displayName || "Admin"}
+                        alt={user.providerData[0]?.displayName || "Admin"}
                         className="h-full w-full object-cover"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-teal-100 text-teal-600">
-                        {user?.displayName?.charAt(0) || "A"}
+                        {user.providerData[0]?.displayName?.charAt(0) || "A"}
                       </div>
                     )}
                   </div>
@@ -583,7 +583,7 @@ export default function AdminPanel() {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Ad Soyad</h3>
                     <p className="text-lg font-medium text-gray-900 dark:text-white">
-                      {user?.displayName || "İsimsiz Kullanıcı"}
+                      {user.providerData[0]?.displayName || "İsimsiz Kullanıcı"}
                     </p>
                   </div>
                   <div>

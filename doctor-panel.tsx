@@ -279,12 +279,12 @@ export default function DoctorPanel() {
                     {user?.photoURL ? (
                       <img
                         src={user.photoURL || "/placeholder.svg"}
-                        alt={user.displayName || "Doktor"}
+                        alt={user.providerData[0]?.displayName || "Doktor"}
                         className="h-full w-full object-cover"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-blue-100 text-blue-600">
-                        {user?.displayName?.charAt(0) || "D"}
+                        {user.providerData[0]?.displayName?.charAt(0) || "D"}
                       </div>
                     )}
                   </div>
@@ -293,7 +293,7 @@ export default function DoctorPanel() {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Ad Soyad</h3>
                     <p className="text-lg font-medium text-gray-900 dark:text-white">
-                      {user?.displayName || "İsimsiz Kullanıcı"}
+                      {user.providerData[0]?.displayName || "İsimsiz Kullanıcı"}
                     </p>
                   </div>
                   <div>

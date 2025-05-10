@@ -1,5 +1,5 @@
-  <PatientCard
-    key={patient.uid}
-    patient={patient}
-    onViewDetails={() => viewPatientDetails(patient.uid)}
+  <PatientCard 
+    key={index} 
+    patient={patient} 
+    onViewDetails={viewPatientDetails} 
   /> 

@@ -491,7 +491,7 @@ export default function AdminPanel() {
                       <PatientCard 
                         key={index} 
                         patient={patient} 
-                        onViewDetails={() => viewPatientDetails} 
+                        onViewDetails={() => patient.uid} 
                       />
                     ))
                   ) : (

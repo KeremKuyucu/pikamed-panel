@@ -27,6 +27,8 @@ export default function DoctorPanel() {
   const [alert, setAlert] = useState({ message: "", type: "" })
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  // İlk olarak, useState içine activePage ekleyelim
+  const [activePage, setActivePage] = useState("users")
 
   // Initialize Firebase
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function DoctorPanel() {
       setToken(idToken)
 
       // Check doctor access
-      const response = await fetch("https://keremkk.glitch.me/pikamed/doctor-access", {
+      const response = await fetch("/pikamed/doctor-access", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -101,7 +103,7 @@ export default function DoctorPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
+      const response = await fetch("/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -133,7 +135,7 @@ export default function DoctorPanel() {
 
     try {
       // Send warning notification
-      await fetch("https://keremkk.glitch.me/pikamed/send-warning", {
+      await fetch("/pikamed/send-warning", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -146,7 +148,7 @@ export default function DoctorPanel() {
       })
 
       // Get patient data
-      const response = await fetch(`https://keremkk.glitch.me/pikamed/userdata`, {
+      const response = await fetch(`/pikamed/userdata`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -177,6 +179,13 @@ export default function DoctorPanel() {
     }
   }
 
+  // Sayfa navigasyonu için handleNavigation fonksiyonunu ekleyelim
+  // handleNavigation fonksiyonunu ekleyin:
+
+  const handleNavigation = (page: string) => {
+    setActivePage(page)
+  }
+
   // If not logged in, show login screen
   if (!user) {
     return <LoginScreen onLogin={signInWithGoogle} />
@@ -184,16 +193,28 @@ export default function DoctorPanel() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} role="doctor" />
+      {/* Return kısmında Sidebar bileşenini güncelleyelim
+      // Sidebar bileşenini aşağıdaki şekilde değiştirin: */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        toggle={() => setSidebarOpen(!sidebarOpen)}
+        role="doctor"
+        onSignOut={handleSignOut}
+        onNavigate={handleNavigation}
+      />
 
       <div className="flex-1 lg:ml-64">
         <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} userInfo={user} />
 
+        {/* main içeriğini güncelleyelim
+        // main içeriğini aşağıdaki şekilde değiştirin: */}
         <main className="p-4 lg:p-6">
           {alert.message && (
             <div
               className={`mb-6 flex items-center rounded-lg p-4 ${
-                alert.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                alert.type === "success"
+                  ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                  : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
               }`}
             >
               <AlertCircle className="mr-3 h-5 w-5" />
@@ -212,38 +233,95 @@ export default function DoctorPanel() {
             <p className="text-gray-600 dark:text-gray-400">Hastalarınızı görüntüleyin ve takip edin.</p>
           </div>
 
-          {/* Hasta İstatistikleri */}
-          <div className="mb-8 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Hasta İstatistikleri</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="rounded-lg bg-teal-50 p-4">
-                <p className="text-sm font-medium text-teal-600">Toplam Hasta</p>
-                <p className="text-2xl font-bold text-teal-700">{patients.length}</p>
+          {activePage === "users" && (
+            <>
+              {/* Hasta İstatistikleri */}
+              <div className="mb-8 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Hasta İstatistikleri</h2>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="rounded-lg bg-teal-50 p-4">
+                    <p className="text-sm font-medium text-teal-600">Toplam Hasta</p>
+                    <p className="text-2xl font-bold text-teal-700">{patients.length}</p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 p-4">
+                    <p className="text-sm font-medium text-blue-600">Aktif Takip</p>
+                    <p className="text-2xl font-bold text-blue-700">0</p>
+                  </div>
+                  <div className="rounded-lg bg-amber-50 p-4">
+                    <p className="text-sm font-medium text-amber-600">Bekleyen İşlemler</p>
+                    <p className="text-2xl font-bold text-amber-700">0</p>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-lg bg-blue-50 p-4">
-                <p className="text-sm font-medium text-blue-600">Aktif Takip</p>
-                <p className="text-2xl font-bold text-blue-700">0</p>
-              </div>
-              <div className="rounded-lg bg-amber-50 p-4">
-                <p className="text-sm font-medium text-amber-600">Bekleyen İşlemler</p>
-                <p className="text-2xl font-bold text-amber-700">0</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Hasta Listesi */}
-          <div>
-            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Kayıtlı Hastalar</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {patients.length > 0 ? (
-                patients.map((patient: any, index: number) => (
-                  <PatientCard key={index} patient={patient} onViewDetails={viewPatientDetails} />
-                ))
-              ) : (
-                <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz hasta bulunmuyor.</p>
-              )}
+              {/* Hasta Listesi */}
+              <div>
+                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Kayıtlı Hastalar</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {patients.length > 0 ? (
+                    patients.map((patient: any, index: number) => (
+                      <PatientCard key={index} patient={patient} onViewDetails={viewPatientDetails} />
+                    ))
+                  ) : (
+                    <p className="col-span-full text-gray-500 dark:text-gray-400">Henüz hasta bulunmuyor.</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activePage === "profile" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Profil Bilgileri</h2>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-32 w-32 overflow-hidden rounded-full bg-gray-200">
+                    {user?.photoURL ? (
+                      <img
+                        src={user.photoURL || "/placeholder.svg"}
+                        alt={user.displayName || "Doktor"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-blue-100 text-blue-600">
+                        {user?.displayName?.charAt(0) || "D"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-grow space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Ad Soyad</h3>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">
+                      {user?.displayName || "İsimsiz Kullanıcı"}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">E-posta</h3>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">{user?.email}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Rol</h3>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">Doktor</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {activePage === "calendar" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Takvim</h2>
+              <p className="text-gray-600 dark:text-gray-400">Takvim özelliği yakında eklenecektir.</p>
+            </div>
+          )}
+
+          {activePage === "settings" && (
+            <div className="rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">Ayarlar</h2>
+              <p className="text-gray-600 dark:text-gray-400">Ayarlar özelliği yakında eklenecektir.</p>
+            </div>
+          )}
         </main>
       </div>
 

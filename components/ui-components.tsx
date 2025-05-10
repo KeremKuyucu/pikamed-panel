@@ -15,7 +15,19 @@ import {
 } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 
-export function Sidebar({ isOpen, toggle, role = "admin" }: { isOpen: boolean; toggle: () => void; role?: string }) {
+export function Sidebar({
+  isOpen,
+  toggle,
+  role = "admin",
+  onSignOut,
+  onNavigate,
+}: {
+  isOpen: boolean
+  toggle: () => void
+  role?: string
+  onSignOut: () => void
+  onNavigate: (page: string) => void
+}) {
   return (
     <>
       <div
@@ -30,10 +42,10 @@ export function Sidebar({ isOpen, toggle, role = "admin" }: { isOpen: boolean; t
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-teal-500 text-white">
               <Activity className="h-5 w-5" />
             </div>
-            <span className="text-lg font-semibold text-teal-700">PikaMed</span>
+            <span className="text-lg font-semibold text-teal-700 dark:text-teal-400">PikaMed</span>
           </div>
-          <button onClick={toggle} className="rounded-full p-1 hover:bg-gray-100 lg:hidden">
-            <X className="h-5 w-5" />
+          <button onClick={toggle} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden">
+            <X className="h-5 w-5 dark:text-gray-300" />
           </button>
         </div>
         <nav className="p-4">
@@ -41,56 +53,59 @@ export function Sidebar({ isOpen, toggle, role = "admin" }: { isOpen: boolean; t
             <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Ana Menü</p>
             <ul className="space-y-1">
               <li>
-                <a
-                  href="#"
-                  className="flex items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
+                <button
+                  onClick={() => onNavigate("profile")}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
                 >
                   <User className="mr-3 h-5 w-5" />
                   <span>Profil</span>
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="flex items-center rounded-md bg-teal-50 dark:bg-teal-900/20 px-3 py-2 text-teal-700 dark:text-teal-300"
+                <button
+                  onClick={() => onNavigate("users")}
+                  className="flex w-full items-center rounded-md bg-teal-50 dark:bg-teal-900/20 px-3 py-2 text-teal-700 dark:text-teal-300"
                 >
                   <Users className="mr-3 h-5 w-5" />
                   <span>Kullanıcılar</span>
-                </a>
+                </button>
               </li>
               {role === "admin" && (
                 <li>
-                  <a
-                    href="#"
-                    className="flex items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
+                  <button
+                    onClick={() => onNavigate("doctors")}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
                   >
                     <Clipboard className="mr-3 h-5 w-5" />
                     <span>Doktor Yönetimi</span>
-                  </a>
+                  </button>
                 </li>
               )}
               <li>
-                <a
-                  href="#"
-                  className="flex items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
+                <button
+                  onClick={() => onNavigate("calendar")}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
                 >
                   <Calendar className="mr-3 h-5 w-5" />
                   <span>Takvim</span>
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#"
-                  className="flex items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
+                <button
+                  onClick={() => onNavigate("settings")}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-700 dark:hover:text-teal-300"
                 >
                   <Settings className="mr-3 h-5 w-5" />
                   <span>Ayarlar</span>
-                </a>
+                </button>
               </li>
             </ul>
           </div>
           <div className="mt-auto">
-            <button className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300">
+            <button
+              onClick={onSignOut}
+              className="flex w-full items-center rounded-md px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
+            >
               <LogOut className="mr-3 h-5 w-5" />
               <span>Çıkış Yap</span>
             </button>

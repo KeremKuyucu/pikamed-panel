@@ -405,6 +405,12 @@ export default function AdminPanel() {
     return <LoginScreen onLogin={signInWithGoogle} />
   }
 
+  // Bildirim gönderme formunun hemen üstüne ekle:
+  function extractBody(html: string) {
+    const match = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    return match ? match[1] : html;
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Return kısmında Sidebar bileşenini güncelleyelim
@@ -656,15 +662,18 @@ export default function AdminPanel() {
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                     placeholder="Bildirim mesajınızı buraya yazın... (HTML formatında yazınız.)"
                   ></textarea>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Not: Tam HTML e-posta şablonunuzu yapıştırabilirsiniz. Önizlemede sadece gövde (body) kısmı gösterilir.
+                  </p>
                 </div>
 
                 <div className="mt-4">
                   <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Önizleme
                   </label>
-                  <div 
+                  <div
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-4 text-sm dark:text-gray-300 min-h-[100px]"
-                    dangerouslySetInnerHTML={{ __html: notificationMessage }}
+                    dangerouslySetInnerHTML={{ __html: extractBody(notificationMessage) }}
                   />
                 </div>
 

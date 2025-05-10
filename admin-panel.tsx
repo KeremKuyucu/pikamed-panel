@@ -61,7 +61,7 @@ export default function AdminPanel() {
       setToken(idToken)
 
       // Check admin access
-      const response = await fetch("/pikamed/admin-access", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/admin-access", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -116,7 +116,7 @@ export default function AdminPanel() {
   // Fetch Doctors
   const getDoctors = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-doctors", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-doctors", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -145,7 +145,7 @@ export default function AdminPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-users", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -174,7 +174,7 @@ export default function AdminPanel() {
   // Fetch Admins
   const getAdmins = async (currentToken: string) => {
     try {
-      const response = await fetch("/pikamed/get-admins", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/get-admins", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -205,7 +205,7 @@ export default function AdminPanel() {
     if (!token || !doctorEmail) return
 
     try {
-      const response = await fetch("/pikamed/add-doctor", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/add-doctor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -242,7 +242,7 @@ export default function AdminPanel() {
     if (!token || !doctorEmail) return
 
     try {
-      const response = await fetch("/pikamed/delete-doctor", {
+      const response = await fetch("https://keremkk.glitch.me/pikamed/delete-doctor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -279,7 +279,7 @@ export default function AdminPanel() {
     if (!token) return
 
     try {
-      const response = await fetch(`/pikamed/userdata`, {
+      const response = await fetch(`https://keremkk.glitch.me/pikamed/userdata`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

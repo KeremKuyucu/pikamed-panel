@@ -22,7 +22,7 @@ export default function RootLayout({
         <link
           rel="icon"
           type="image/x-icon"
-          href="https://cdn.glitch.global/e74d89f5-045d-4ad2-94c7-e2c99ed95318/logo.jpg?v=1737331226085"
+          href="https://cdn.glitch.global/e74d89f5-045d-4ad2-94c7-e2c99ed95318/logo.png?v=1747478110513"
         />
       </head>
       <body className={inter.className}>

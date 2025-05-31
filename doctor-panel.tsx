@@ -8,7 +8,7 @@ import { AlertCircle, X } from "lucide-react"
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBJGx1bGVaI43YmpoZUPP70DAvFVRMJVWM",
+  apiKey: process.env.apikey,
   authDomain: "marul-tarlasii.firebaseapp.com",
   projectId: "marul-tarlasii",
   storageBucket: "marul-tarlasii.firebasestorage.app",

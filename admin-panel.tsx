@@ -21,7 +21,7 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging"
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.apikey,
+  apiKey: "AIzaSyBJGx1bGVaI43YmpoZUPP70DAvFVRMJVWM",
   authDomain: "marul-tarlasii.firebaseapp.com",
   projectId: "marul-tarlasii",
   storageBucket: "marul-tarlasii.firebasestorage.app",

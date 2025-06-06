@@ -12,4 +12,4 @@ Bu panel, PikaMed sisteminin yönetimi ve kullanıcı işlemleri için geliştir
 
 Çalışması için api server gereklidir
 
-https://github.com/KeremKuyucu/keremkk-apiserver
+https://github.com/KeremKuyucu/pikamed-apiserver

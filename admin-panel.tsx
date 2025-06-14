@@ -93,7 +93,7 @@ export default function AdminPanel() {
       setToken(idToken)
 
       // Check admin access
-      const response = await fetch("https://keremkk.glitch.me/pikamed/admin-access", {
+      const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/admin-access", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -148,7 +148,7 @@ export default function AdminPanel() {
   // Fetch Doctors
   const getDoctors = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-doctors", {
+      const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/get-doctors", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -177,7 +177,7 @@ export default function AdminPanel() {
   // Fetch Patients
   const getPatients = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-users", {
+      const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/get-users", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -206,7 +206,7 @@ export default function AdminPanel() {
   // Fetch Admins
   const getAdmins = async (currentToken: string) => {
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/get-admins", {
+      const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/get-admins", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +237,7 @@ export default function AdminPanel() {
     if (!token || !doctorEmail) return
 
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/add-doctor", {
+      const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/add-doctor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -274,7 +274,7 @@ export default function AdminPanel() {
     if (!token || !doctorEmail) return
 
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/delete-doctor", {
+      const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/delete-doctor", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -311,7 +311,7 @@ export default function AdminPanel() {
     if (!token) return
 
     try {
-      const response = await fetch(`https://keremkk.glitch.me/pikamed/userdata`, {
+      const response = await fetch(`https://pikamed-api.keremkk.com.tr/api/pikamed/userdata`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -355,7 +355,7 @@ export default function AdminPanel() {
     }
 
     try {
-      const response = await fetch("https://keremkk.glitch.me/pikamed/send-notification", {
+      const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/send-notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

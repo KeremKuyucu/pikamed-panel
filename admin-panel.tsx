@@ -15,8 +15,6 @@ import {
 import { PlusCircle, Trash2, AlertCircle, X, Calendar, Settings } from "lucide-react"
 
 // Firebase Cloud Messaging için gerekli importları ekleyelim
-// Dosyanın başındaki import kısmına aşağıdaki importları ekleyin:
-
 import { getMessaging, getToken, onMessage } from "firebase/messaging"
 
 // Firebase configuration
@@ -44,40 +42,33 @@ export default function AdminPanel() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
-  // useState içine FCM için gerekli state'leri ekleyelim
-  // useState kısmına aşağıdaki state'leri ekleyin:
-
   const [fcmToken, setFcmToken] = useState<string | null>(null)
   const [messaging, setMessaging] = useState<any>(null)
 
-  // Admin paneline bildirim gönderme özelliği ekleyelim ve sekme işlevselliğini ekleyelim
-  // Ayrıca yetki kontrolünü güncelleyelim
-
-  // İlk olarak, useState içine activePage ekleyelim
   const [activePage, setActivePage] = useState("users")
   const [notificationMessage, setNotificationMessage] = useState("")
   const [notificationTarget, setNotificationTarget] = useState("all")
   const [selectedPatientId, setSelectedPatientId] = useState("")
+  // Yeni eklenen state: Harici e-posta adresi için
+  const [externalEmail, setExternalEmail] = useState("");
 
-    // Initialize Firebase
-    useEffect(() => {
-      const firebaseApp = initializeApp(firebaseConfig)
-      const firebaseAuth = getAuth(firebaseApp)
-      setApp(firebaseApp)
-      setAuth(firebaseAuth)
-  
-      // Initialize Firebase Cloud Messaging
-      try {
-        if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-          const messagingInstance = getMessaging(firebaseApp)
-          setMessaging(messagingInstance)
-        }
-      } catch (error) {
-        console.error("FCM initialization error:", error)
+  // Initialize Firebase
+  useEffect(() => {
+    const firebaseApp = initializeApp(firebaseConfig)
+    const firebaseAuth = getAuth(firebaseApp)
+    setApp(firebaseApp)
+    setAuth(firebaseAuth)
+
+    // Initialize Firebase Cloud Messaging
+    try {
+      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        const messagingInstance = getMessaging(firebaseApp)
+        setMessaging(messagingInstance)
       }
-    }, [])
-  // signInWithGoogle fonksiyonunda yetki kontrolünü güncelleyelim
-  // signInWithGoogle fonksiyonunu aşağıdaki şekilde değiştirin:
+    } catch (error) {
+      console.error("FCM initialization error:", error)
+    }
+  }, [])
 
   // Handle Google Sign In
   const signInWithGoogle = async () => {
@@ -342,9 +333,7 @@ export default function AdminPanel() {
     }
   }
 
-  // Bildirim gönderme fonksiyonunu ekleyelim
-  // sendNotification fonksiyonunu ekleyin:
-
+  // Bildirim gönderme fonksiyonu
   const sendNotification = async () => {
     if (!token || !notificationMessage) {
       setAlert({
@@ -354,21 +343,47 @@ export default function AdminPanel() {
       return
     }
 
+    // Eğer hedef 'specific' ve belirli bir hasta seçilmemişse uyarı ver
+    if (notificationTarget === "specific" && !selectedPatientId) {
+        setAlert({
+            message: "Lütfen bir hasta seçin veya hedefi değiştirin.",
+            type: "error",
+        });
+        return;
+    }
+
+    // Eğer hedef 'external' ve harici e-posta boşsa uyarı ver
+    if (notificationTarget === "external" && !externalEmail) {
+        setAlert({
+            message: "Lütfen harici e-posta adresini girin.",
+            type: "error",
+        });
+        return;
+    }
+
+
     try {
+      const payload: any = {
+        message: notificationMessage,
+        target: notificationTarget,
+        senderUid: user.uid,
+        title: "PikaMed Bildirimi",
+        useFCM: true,
+      };
+
+      if (notificationTarget === "specific") {
+        payload.targetId = selectedPatientId;
+      } else if (notificationTarget === "external") {
+        payload.targetEmail = externalEmail; // Harici e-posta adresini ekliyoruz
+      }
+
       const response = await fetch("https://pikamed-api.keremkk.com.tr/api/pikamed/send-notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          message: notificationMessage,
-          target: notificationTarget,
-          targetId: notificationTarget === "specific" ? selectedPatientId : undefined,
-          senderUid: user.uid,
-          title: "PikaMed Bildirimi",
-          useFCM: true,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const result = await response.json()
@@ -379,6 +394,8 @@ export default function AdminPanel() {
           type: "success",
         })
         setNotificationMessage("")
+        setExternalEmail(""); // Başarılı gönderimde harici e-postayı sıfırla
+        setSelectedPatientId(""); // Başarılı gönderimde seçili hastayı sıfırla
       } else {
         setAlert({
           message: result.message || "Bildirim gönderilirken bir hata oluştu.",
@@ -393,9 +410,7 @@ export default function AdminPanel() {
     }
   }
 
-  // Sayfa navigasyonu için handleNavigation fonksiyonunu ekleyelim
-  // handleNavigation fonksiyonunu ekleyin:
-
+  // Sayfa navigasyonu için handleNavigation fonksiyonu
   const handleNavigation = (page: string) => {
     setActivePage(page)
   }
@@ -413,9 +428,6 @@ export default function AdminPanel() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Return kısmında Sidebar bileşenini güncelleyelim
-      // Sidebar bileşenini aşağıdaki şekilde değiştirin: */}
-
       <Sidebar
         isOpen={sidebarOpen}
         toggle={() => setSidebarOpen(!sidebarOpen)}
@@ -426,9 +438,6 @@ export default function AdminPanel() {
 
       <div className="flex-1 lg:ml-64">
         <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} userInfo={user} />
-
-        {/* main içeriğini güncelleyelim, bildirim gönderme formunu ekleyelim
-        // main içeriğini aşağıdaki şekilde değiştirin: */}
 
         <main className="p-4 lg:p-6">
           {alert.message && (
@@ -494,10 +503,10 @@ export default function AdminPanel() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {patients.length > 0 ? (
                     patients.map((patient: any, index: number) => (
-                      <PatientCard 
-                        key={index} 
-                        patient={patient} 
-                        onViewDetails={(uid) => viewPatientDetails(uid)} 
+                      <PatientCard
+                        key={index}
+                        patient={patient}
+                        onViewDetails={(uid) => viewPatientDetails(uid)}
                       />
                     ))
                   ) : (
@@ -620,6 +629,7 @@ export default function AdminPanel() {
                     <option value="doctors">Tüm Doktorlar</option>
                     <option value="patients">Tüm Hastalar</option>
                     <option value="specific">Belirli Bir Hasta</option>
+                    <option value="external">Harici E-posta</option> {/* Yeni eklenen seçenek */}
                   </select>
                 </div>
 
@@ -644,6 +654,26 @@ export default function AdminPanel() {
                         </option>
                       ))}
                     </select>
+                  </div>
+                )}
+
+                {/* Yeni eklenen harici e-posta input alanı */}
+                {notificationTarget === "external" && (
+                  <div>
+                    <label
+                      htmlFor="externalEmail"
+                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Harici E-posta Adresi
+                    </label>
+                    <input
+                      type="email"
+                      id="externalEmail"
+                      value={externalEmail}
+                      onChange={(e) => setExternalEmail(e.target.value)}
+                      placeholder="harici@ornek.com"
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-sm dark:text-gray-300 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    />
                   </div>
                 )}
 

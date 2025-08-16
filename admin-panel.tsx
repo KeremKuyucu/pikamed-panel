@@ -19,14 +19,14 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging"
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD-AIzaSyBJGx1bGVaI43YmpoZUPP70DAvFVRMJVWM",
+  apiKey: process.env.apikey,
   authDomain: "marul-tarlasii.firebaseapp.com",
   projectId: "marul-tarlasii",
   storageBucket: "marul-tarlasii.firebasestorage.app",
   messagingSenderId: "770930842223",
   appId: "1:770930842223:web:555a834a781469055d8b9a",
-  measurementId: "G-ECMY15GHY6",
-}
+  measurementId: "G-ECMY15GHY6"
+};
 
 export default function AdminPanel() {
   const [app, setApp] = useState<any>(null)
